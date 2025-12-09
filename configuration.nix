@@ -73,16 +73,19 @@ let
   # Use hardcoded site-packages path to avoid Python version object evaluation issues
   pySitePackages = "lib/python3.12/site-packages";
 
+  # Include webrtc's propagated Python deps on PYTHONPATH
+  webrtcDeps = webrtcPkg.propagatedBuildInputs or [];
+
   pythonPath = lib.concatStringsSep ":" (lib.filter (p: p != "") [
     (lib.makeSearchPath rosPy.sitePackages rosRuntimePackages)
-    (lib.makeSearchPath pySitePackages [ pyEnv webrtcPkg ])
+    (lib.makeSearchPath pySitePackages ([ pyEnv webrtcPkg ] ++ webrtcDeps))
     (lib.makeSearchPath pySitePackages [ pyEnv rosWorkspace ])
   ]);
 
   amentRoots = rosRuntimePackages ++ [ webrtcPkg rosWorkspace ];
   amentPrefixPath = lib.concatStringsSep ":" (map (pkg: "${pkg}") amentRoots);
 
-  webrtcRuntimeInputs = rosRuntimePackages ++ [ pyEnv webrtcPkg ];
+  webrtcRuntimeInputs = rosRuntimePackages ++ [ pyEnv webrtcPkg ] ++ webrtcDeps;
   webrtcRuntimePrefixes = lib.concatStringsSep " " (map (pkg: "${pkg}") webrtcRuntimeInputs);
   webrtcLibraryPath = lib.makeLibraryPath webrtcRuntimeInputs;
   
